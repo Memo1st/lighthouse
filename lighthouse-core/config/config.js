@@ -775,13 +775,13 @@ class Config {
 
   /**
    * Take an array of audits and audit paths and require any paths (possibly
-   * relative to the optional `configDir`) using `Runner.resolvePlugin`,
+   * relative to the optional `configPath`) using `Runner.resolvePlugin`,
    * leaving only an array of AuditDefns.
    * @param {LH.Config.Json['audits']} audits
-   * @param {string=} configDir
+   * @param {string=} configPath
    * @return {Config['audits']}
    */
-  static requireAudits(audits, configDir) {
+  static requireAudits(audits, configPath) {
     const status = {msg: 'Requiring audits', id: 'lh:config:requireAudits'};
     log.time(status, 'verbose');
     const expandedAudits = Config.expandAuditShorthand(audits);
@@ -801,7 +801,7 @@ class Config {
         let requirePath = `../audits/${audit.path}`;
         if (!coreAudit) {
           // Otherwise, attempt to find it elsewhere. This throws if not found.
-          requirePath = Runner.resolvePlugin(audit.path, configDir, 'audit');
+          requirePath = Runner.resolvePlugin(audit.path, configPath, 'audit');
         }
         implementation = /** @type {typeof Audit} */ (require(requirePath));
       }
@@ -823,16 +823,16 @@ class Config {
    * @param {string} path
    * @param {{}=} options
    * @param {Array<string>} coreAuditList
-   * @param {string=} configDir
+   * @param {string=} configPath
    * @return {LH.Config.GathererDefn}
    */
-  static requireGathererFromPath(path, options, coreAuditList, configDir) {
+  static requireGathererFromPath(path, options, coreAuditList, configPath) {
     const coreGatherer = coreAuditList.find(a => a === `${path}.js`);
 
     let requirePath = `../gather/gatherers/${path}`;
     if (!coreGatherer) {
       // Otherwise, attempt to find it elsewhere. This throws if not found.
-      requirePath = Runner.resolvePlugin(path, configDir, 'gatherer');
+      requirePath = Runner.resolvePlugin(path, configPath, 'gatherer');
     }
 
     const GathererClass = /** @type {GathererConstructor} */ (require(requirePath));
@@ -847,13 +847,13 @@ class Config {
 
   /**
    * Takes an array of passes with every property now initialized except the
-   * gatherers and requires them, (relative to the optional `configDir` if
+   * gatherers and requires them, (relative to the optional `configPath` if
    * provided) using `Runner.resolvePlugin`, returning an array of full Passes.
    * @param {?Array<Required<LH.Config.PassJson>>} passes
-   * @param {string=} configDir
+   * @param {string=} configPath
    * @return {Config['passes']}
    */
-  static requireGatherers(passes, configDir) {
+  static requireGatherers(passes, configPath) {
     if (!passes) {
       return null;
     }
@@ -881,7 +881,7 @@ class Config {
         } else if (gathererDefn.path) {
           const path = gathererDefn.path;
           const options = gathererDefn.options;
-          return Config.requireGathererFromPath(path, options, coreList, configDir);
+          return Config.requireGathererFromPath(path, options, coreList, configPath);
         } else {
           throw new Error('Invalid expanded Gatherer: ' + JSON.stringify(gathererDefn));
         }
