@@ -871,35 +871,35 @@ class Config {
   }
 
   /**
-   * Resolves the location of the specified plugin and returns an absolute
+   * Resolves the location of the specified module and returns an absolute
    * string path to the file. Used for loading custom audits and gatherers.
-   * Throws an error if no plugin is found.
-   * @param {string} plugin
+   * Throws an error if no module is found.
+   * @param {string} moduleIdentifier
    * @param {string=} configDir The absolute path to the directory of the config file, if there is one.
    * @param {string=} category Optional plugin category (e.g. 'audit') for better error messages.
    * @return {string}
    * @throws {Error}
    */
-  static resolveModule(plugin, configDir, category) {
+  static resolveModule(moduleIdentifier, configDir, category) {
     // First try straight `require()`. Unlikely to be specified relative to this
-    // file, but adds support for Lighthouse plugins in npm modules as
+    // file, but adds support for Lighthouse modules from npm since
     // `require()` walks up parent directories looking inside any node_modules/
     // present. Also handles absolute paths.
     try {
-      return require.resolve(plugin);
+      return require.resolve(moduleIdentifier);
     } catch (e) {}
 
-    // See if the plugin resolves relative to the current working directory.
+    // See if the module resolves relative to the current working directory.
     // Most useful to handle the case of invoking Lighthouse as a module, since
     // then the config is an object and so has no path.
-    const cwdPath = path.resolve(process.cwd(), plugin);
+    const cwdPath = path.resolve(process.cwd(), moduleIdentifier);
     try {
       return require.resolve(cwdPath);
     } catch (e) {}
 
     const errorString = 'Unable to locate ' +
         (category ? `${category}: ` : '') +
-        `${plugin} (tried to require() from '${__dirname}' and load from '${cwdPath}'`;
+        `${moduleIdentifier} (tried to require() from '${__dirname}' and load from '${cwdPath}'`;
 
     if (!configDir) {
       throw new Error(errorString + ')');
@@ -907,8 +907,8 @@ class Config {
 
     // Finally, try looking up relative to the config file path. Just like the
     // relative path passed to `require()` is found relative to the file it's
-    // in, this allows plugin paths to be specified relative to the config file.
-    const relativePath = path.resolve(configDir, plugin);
+    // in, this allows module paths to be specified relative to the config file.
+    const relativePath = path.resolve(configDir, moduleIdentifier);
     try {
       return require.resolve(relativePath);
     } catch (requireError) {}
